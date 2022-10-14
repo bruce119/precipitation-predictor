@@ -2,17 +2,25 @@ from datetime import datetime, timedelta
 from typing import Union, Optional
 
 import pytz
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from helper.helper_functions import check_datetime, load_csv_data_cleaned, lat_long_validation, lat_long_validation_v2
 from predictor.precipitation_predict import get_predicted_data
 from response.error_response import ErrorResponse
 from response.success_response import PrecipitationResponse
 
+import logging
+
+logging.basicConfig(level=logging.INFO,
+format='%(asctime)s %(levelname)s %(message)s',
+      filename='./logs/full_logs.log',
+      filemode='a')
+
 app = FastAPI()
 
 @app.get("/precipitation")
 def read_data(
+        request: Request,
         latitude: Optional[str] = None,
         longitude: Optional[str] = None,
         time: Union[str, None] = None
@@ -39,6 +47,7 @@ def read_data(
         e_response.error_message = "Latitude/Longitude/time parameter is incorrect"
         e_response.correct_params = "Please provide proper latitude/longitude/time in query params like " \
                                     "latitude=52.48&longitude=6.2&time=2022101001 "
+        logging.error(f"Failed for query_params: [{request.url.query}], error:- incorrect query params")
         return e_response.return_json()
 
     """
@@ -57,6 +66,7 @@ def read_data(
             e_response.error_code = 401
             e_response.error_message = "Latitude/Longitude does not belong to the desired area"
             e_response.correct_params = "The Latitude/Longitude should belong Netherlands ex:- (lat- 52.48, Long- 6.2)"
+            logging.error(f"Failed for query_params: [{request.url.query}], error:- lat long out of Netherlands")
             return e_response.return_json()
     except Exception as e:
         print(e)
@@ -64,6 +74,7 @@ def read_data(
         e_response.error_code = 401
         e_response.error_message = "Latitude/Longitude should be of type float"
         e_response.correct_params = "Latitude/Longitude should be like - latitude=52.48&longitude=6.2"
+        logging.error(f"Failed for query_params: [{request.url.query}], error:- not numeric characters in lat long")
         return e_response.return_json()
 
     """
@@ -87,28 +98,33 @@ def read_data(
             s_response.success_code = 200
             s_response.precipitation_value = pred_precip if pred_precip > 0.5 else 0.5
             s_response.std_dev = std_dev
+            logging.info(f"Success for query_params: [{request.url.query}], precip_pred: {s_response.precipitation_value}, std_dev: {s_response.std_dev}")
             return s_response.return_json()
         elif code == 2:
             e_response = ErrorResponse()
             e_response.error_code = 401
             e_response.error_message = "Time must be of type YYYYMMDDHH"
             e_response.correct_params = "ex:- 2022010112"
+            logging.error(f"Failed for query_params: [{request.url.query}], error:- time is not of type YYYYMMDDHH")
             return e_response.return_json()
         elif code == 3:
             e_response = ErrorResponse()
             e_response.error_code = 401
             e_response.error_message = "Given time is grater than current time"
             e_response.correct_params = "Time provided should be anytime before today"
+            logging.error(f"Failed for query_params: [{request.url.query}], error:- time provided in future")
             return e_response.return_json()
         else:
             e_response = ErrorResponse()
             e_response.error_code = 401
             e_response.error_message = "Please Check the time properly"
             e_response.correct_params = "check if the time is before today and of the format YYYYMMDDHH like 2022010112"
+            logging.error(f"Failed for query_params: [{request.url.query}], error:- time is of today or not in correct format")
             return e_response.return_json()
     except Exception as e:
         e_response = ErrorResponse()
         e_response.error_code = 500
         e_response.error_message = "INTERNAL SERVER ERROR"
         e_response.error_message = "KNMI did not produce any data please check the time and lat/long input"
+        logging.error(f"Failed for query_params: [{request.url.query}], error:- str(e)")
         return e_response.return_json()
