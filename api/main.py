@@ -91,7 +91,7 @@ def read_data(
     try:
         code, time_val = check_datetime(time)
         if code == 1:
-            start_time = (time_val - timedelta(days=1)).strftime('%Y%m%d%H')
+            start_time = (time_val - timedelta(hours=1)).strftime('%Y%m%d%H')
             end_time = time_val.strftime('%Y%m%d%H')
             pred_precip, std_dev = get_predicted_data(start_time, end_time, latitude, longitude)
             s_response = PrecipitationResponse()
