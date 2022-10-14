@@ -3,3 +3,4 @@
 /.idea/precipitation-predictor.iml
 /.idea/modules.xml
 /.idea/misc.xml
+*.pyc
