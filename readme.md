@@ -1,5 +1,5 @@
 This document contains the steps to set up the python environment by creating a virtualenv and installing the packages 
-## instructions to use the API
+## instructions to use the API(written with FastAPI)
 
 * step 1: change to precipitation-prediction-api directory `cd precipitation-predictor`
 
