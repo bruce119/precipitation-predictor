@@ -17,6 +17,7 @@ or http://0.0.0.0:8080/precipitation?latitude=52.20&longitude=5.90
 * optional: To run the tests Run the command `pytest api/api_test.py`
 
 ### The tests will automatically run and check if all systems are operational before running the API.
+#### used uvicorn server to run with 5 workers for speeding up the response time. 
 #### * Stress Test with locust can also be done by running `locust -f stress_test/stress_test.py` and then going to the link provided(make sure the API is running before doing this). In the host section put `http://0.0.0.0:8080`.
 
 The end :)
