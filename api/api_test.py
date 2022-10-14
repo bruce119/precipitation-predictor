@@ -12,8 +12,8 @@ def test_read_main():
     headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
     response = client.get("/precipitation?latitude=52.18&longitude=4.42&time=2022010110", headers=headers)
     assert response.status_code == 200
-    assert response.json() == {"Status": "Success",
-                               "body": {"code": 200, "predicted_precipitation(0.1 mm)": [0.32674413688381976],"standard_deviation":[1.5004933962662892]}}
+    assert response.json() == {"Status": "Success", "body": {"code": 200, "predicted_precipitation(0.1 mm)": 0.5,
+                                                             "standard_deviation": [1.5004933962662892]}}
 
 
 def test_failure_params_main():
