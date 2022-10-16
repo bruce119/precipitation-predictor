@@ -10,10 +10,11 @@ This document contains the steps to set up the python environment by creating a 
 * Step 3: Activate the virtualenv `source venv_folder_name/bin/activate`
 
 * Step 4: Use the requirements.txt file to install all the required packages needed for both the API and for the assignment.ipynb notebook `pip install -r requirements.txt`
-  * optional step(if you want to load historical data(`2019-10-17` to `2022-10-19`) from knmi_database to redis): run `python helper/load_to_redis.py`  NB:- (will take some time)
-  * optional step(if you want to load 3 years historical data to redis from today to db): run `python helper/history_data_to_db.py`  NB:- (will take some time)
-  * optional step(if you want to run 3 years historical load and load directly to redis from knmi-API):  run `python helper/history_data_to_redis.py`
-  * optional step(if you want to run 3 years historical load and load directly to redis and db from knmi-API): run `python helper/history_data_to_db_and_redis.py`
+  * optional step - (if you want to load historical data(`2019-10-17` to `2022-10-19`) from `knmi_database` already present in `/data` folder to redis): run `python helper/load_to_redis.py`  NB:- (will take some time)
+  * optional step - (if you want to load 3 years historical data directly to redis and db from knmi-API): run `python helper/history_data_to_db_and_redis.py`
+  * optional step - (if you want to load 3 years historical data to db from today, then load it to redis ): First run `python helper/history_data_to_db.py` then run `python helper/load_to_redis.py`   NB:- (will take some time) 
+  * optional step - (if you want to run 3 years historical load and load directly to redis from knmi-API):  run `python helper/history_data_to_redis.py`
+  
 
 * Step 5: Run the command `sh run_app.sh` to start the FastAPI application
 
