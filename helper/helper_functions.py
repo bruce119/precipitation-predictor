@@ -28,6 +28,17 @@ def load_csv_data_cleaned(path):
 
 
 def get_data_from_db(start, end):
+    """ take hours data from cache if present else add it
+    Parameters
+    ----------
+    start:- starting hour for prediction
+    end:- ending hour for predition
+
+    Returns:- precipitaion data
+    -------
+
+    """
+
     if r.exists(end):
         df = context.deserialize(r.get(end))
     else:
