@@ -4,3 +4,6 @@
 /.idea/modules.xml
 /.idea/misc.xml
 *.pyc
+logs/full_logs.log
+.idea/vcs.xml
+*.log

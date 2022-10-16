@@ -1,9 +1,15 @@
+import warnings
 from datetime import datetime
-
+warnings.filterwarnings("ignore")
 import pandas as pd
 import reverse_geocode
 from numpy import int64
+import  pyarrow as pa
+from helper.redis_connector import create_redis_conn
+from knmi.knmi_loader import get_precipitation_data
+context = pa.default_serialization_context()
 
+r = create_redis_conn()
 
 def load_csv_data_cleaned(path):
     """Clean and load the  weatherstations-NL csv data
@@ -19,6 +25,23 @@ def load_csv_data_cleaned(path):
     station_info['lat'] = station_info['lat'].str.replace('N', '').str.strip().astype(float)
     station_info['long'] = station_info['long'].str.replace('E', '').str.strip().astype(float)
     return station_info
+
+
+def get_data_from_db(start, end):
+    if r.exists(end):
+        df = context.deserialize(r.get(end))
+    else:
+        print('not found')
+        df = get_precipitation_data(start, end)
+        df['date_back'] = str(end)
+        try:
+            r.set(end, context.serialize(df[['STN', 'RH', 'date_back']]).to_buffer().to_pybytes())
+            r.expire(end, 365 * 3 * 24 * 60 * 60)
+        except Exception as e:
+            print(e)
+    df.drop('date_back', axis=1)
+    df['STN'] = df['STN'].astype('int64')
+    return df
 
 
 def prepare_data(stations_location_data, precip_data):

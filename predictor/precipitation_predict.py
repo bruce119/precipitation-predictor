@@ -1,4 +1,4 @@
-from helper.helper_functions import load_csv_data_cleaned, prepare_data, get_X_y
+from helper.helper_functions import load_csv_data_cleaned, prepare_data, get_X_y, get_data_from_db
 from knmi.knmi_loader import get_precipitation_data
 from lib.kriging import Precipitation
 
@@ -17,7 +17,7 @@ def get_predicted_data(start, end, lat, long):
                                                 returned
     """
     stations_location_data_raw = load_csv_data_cleaned('./data/weatherstations-NL.csv')
-    precip_data_raw = get_precipitation_data(start, end)
+    precip_data_raw = get_data_from_db(start, end)
     stations_location_data_raw, precip_data_raw = prepare_data(stations_location_data_raw, precip_data_raw)
     X, y = get_X_y(stations_location_data_raw, precip_data_raw)
     model = Precipitation()

@@ -9,4 +9,4 @@ class PerformanceTests(HttpUser):
     def testFastApi(self):
 
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
-        self.client.get("/precipitation?latitude=50.81&longitude=6.2", headers=headers)
+        self.client.get("/precipitation?latitude=52.27&longitude=6.888885&time=2022101401", headers=headers)

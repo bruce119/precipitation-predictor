@@ -1,22 +1,30 @@
+import sqlite3
+import warnings
 from datetime import datetime, timedelta
 from typing import Union, Optional
 
 import pytz
 from fastapi import FastAPI, Request
+from fastapi_utils.tasks import repeat_every
 
 from helper.helper_functions import check_datetime, load_csv_data_cleaned, lat_long_validation, lat_long_validation_v2
+from knmi.knmi_loader import get_precipitation_data
 from predictor.precipitation_predict import get_predicted_data
 from response.error_response import ErrorResponse
 from response.success_response import PrecipitationResponse
-
+warnings.filterwarnings("ignore")
 import logging
 
+conn = sqlite3.connect('./data/knmi_database', check_same_thread=False)
+
+
 logging.basicConfig(level=logging.INFO,
-format='%(asctime)s %(levelname)s %(message)s',
-      filename='./logs/full_logs.log',
-      filemode='a')
+                    format='%(asctime)s %(levelname)s %(message)s',
+                    filename='./logs/full_logs.log',
+                    filemode='a')
 
 app = FastAPI()
+
 
 @app.get("/precipitation")
 def read_data(
@@ -98,7 +106,8 @@ def read_data(
             s_response.success_code = 200
             s_response.precipitation_value = pred_precip if pred_precip > 0.5 else 0.5
             s_response.std_dev = std_dev
-            logging.info(f"Success for query_params: [{request.url.query}], precip_pred: {s_response.precipitation_value}, std_dev: {s_response.std_dev}")
+            logging.info(
+                f"Success for query_params: [{request.url.query}], precip_pred: {s_response.precipitation_value}, std_dev: {s_response.std_dev}")
             return s_response.return_json()
         elif code == 2:
             e_response = ErrorResponse()
@@ -119,12 +128,42 @@ def read_data(
             e_response.error_code = 401
             e_response.error_message = "Please Check the time properly"
             e_response.correct_params = "check if the time is before today and of the format YYYYMMDDHH like 2022010112"
-            logging.error(f"Failed for query_params: [{request.url.query}], error:- time is of today or not in correct format")
+            logging.error(
+                f"Failed for query_params: [{request.url.query}], error:- time is of today or not in correct format")
             return e_response.return_json()
     except Exception as e:
         e_response = ErrorResponse()
         e_response.error_code = 500
         e_response.error_message = "INTERNAL SERVER ERROR"
         e_response.error_message = "KNMI did not produce any data please check the time and lat/long input"
-        logging.error(f"Failed for query_params: [{request.url.query}], error:- str(e)")
+        logging.error(f"Failed for query_params: [{request.url.query}], error:- {str(e)}")
         return e_response.return_json()
+
+
+# @app.on_event("startup")
+# @repeat_every(seconds=24 * 60 * 60 )  # 24 hours
+# def remove_expired_tokens_task() -> None:
+#     try:
+#         c = conn.cursor()
+#         three_years_ago = datetime.now() - timedelta(days=365 * 3)  # 3 years data will be kept in db
+#         logging.info(f"Deleting data less than {three_years_ago.strftime('%Y%m%d%H')}")
+#         c.execute(f"Delete from precip_history_data where date_back < {three_years_ago.strftime('%Y%m%d%H')}")
+#         one_day_ago = datetime.now() - timedelta(days=2)
+#         start = one_day_ago-timedelta(hours=1)
+#         logging.info(f"Loading data for {start.strftime('%Y%m%d%H')}")
+#         for i in range(1, 48):
+#             end = start + timedelta(hours=1)
+#             try:
+#                 df = get_precipitation_data(start.strftime('%Y%m%d%H'), end.strftime('%Y%m%d%H'))
+#                 df['date_back'] = end.strftime('%Y%m%d%H')
+#                 df[['STN', 'RH', 'date_back']].to_sql('precip_history_data_tmp', conn, if_exists='append', index=False)
+#                 c.execute(f"delete from precip_history_data where date_back={end.strftime('%Y%m%d%H')}")
+#                 c.execute("insert into  precip_history_data select distinct * from precip_history_data_tmp;")
+#                 c.execute("delete from precip_history_data_tmp")
+#                 logging.info(f"Data for {start.strftime('%Y%m%d%H')} :- {str(df.shape)}")
+#             except Exception as e:
+#                 logging.error(str(e))
+#             start = end
+#         c = conn.close()
+#     except Exception as e:
+#         logging.error(str(e))
